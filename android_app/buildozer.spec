@@ -8,7 +8,13 @@ version = 1.0
 
 # python3, kivy = UI. pyjnius = akses API Android (Bluetooth) dari Python.
 # usb4a/usbserial4a = akses USB serial host mode Android (kabel OBD2 USB).
-requirements = python3,kivy==2.3.0,pyjnius,usb4a,usbserial4a
+#
+# PENTING: python3 DIKUNCI ke 3.11 secara eksplisit. Kalau tidak dikunci,
+# python-for-android otomatis pakai versi Python terbarunya (saat ini 3.14),
+# yang C-API-nya sudah berubah dan bikin Kivy 2.3.0 gagal compile dengan
+# error "too few arguments to function call" di kivy/_clock.c dkk.
+# Python 3.11 adalah versi yang sudah terbukti kompatibel dengan Kivy 2.3.0.
+requirements = python3==3.11.6,kivy==2.3.0,pyjnius,usb4a,usbserial4a
 
 orientation = portrait
 fullscreen = 0
