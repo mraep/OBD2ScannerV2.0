@@ -14,7 +14,12 @@ version = 1.0
 # yang C-API-nya sudah berubah dan bikin Kivy 2.3.0 gagal compile dengan
 # error "too few arguments to function call" di kivy/_clock.c dkk.
 # Python 3.11 adalah versi yang sudah terbukti kompatibel dengan Kivy 2.3.0.
-requirements = python3==3.11.6,kivy==2.3.0,pyjnius,usb4a,usbserial4a
+#
+# hostpython3 (Python yang dipakai DI MESIN BUILD untuk cross-compile, beda
+# dengan python3 yang jalan DI HP Android) WAJIB versinya SAMA PERSIS dengan
+# python3 di atas - kalau tidak, p4a menolak build dengan error
+# "python3 should have same version as hostpython3".
+requirements = python3==3.11.6,hostpython3==3.11.6,kivy==2.3.0,pyjnius,usb4a,usbserial4a
 
 orientation = portrait
 fullscreen = 0
