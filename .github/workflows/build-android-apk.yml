@@ -1,0 +1,32 @@
+name: Build Android APK
+
+# Upload folder "android_app/" ini ke root repo GitHub kamu, lalu jalankan
+# workflow ini (tab Actions -> Build Android APK -> Run workflow), atau akan
+# otomatis jalan tiap kali file di android_app/ berubah.
+# Build pertama biasanya 20-40 menit (Buildozer mengunduh Android SDK/NDK).
+# Hasil APK bisa diunduh dari tab Actions -> run terakhir -> bagian Artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android_app/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build APK with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          workdir: android_app
+          buildozer_version: stable
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obd2-scanner-android-apk
+          path: ${{ steps.buildozer.outputs.filename }}
