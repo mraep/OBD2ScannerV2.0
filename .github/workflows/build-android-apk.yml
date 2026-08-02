@@ -1,0 +1,82 @@
+name: Build Android APK
+
+# Upload folder "android_app/" ini ke root repo GitHub kamu, lalu jalankan
+# workflow ini (tab Actions -> Build Android APK -> Run workflow), atau akan
+# otomatis jalan tiap kali file di android_app/ berubah.
+#
+# Versi ini install Buildozer LANGSUNG di runner Ubuntu (tanpa Docker),
+# supaya tidak kena masalah "Docker build failed" dari image pihak ketiga.
+# Build pertama tetap 20-40 menit (Buildozer mengunduh Android SDK/NDK).
+# Hasil APK bisa diunduh dari tab Actions -> run terakhir -> bagian Artifacts.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "android_app/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip openjdk-17-jdk autoconf libtool pkg-config \
+            zlib1g-dev libncurses-dev libncursesw5-dev libtinfo6 cmake \
+            libffi-dev libssl-dev build-essential ccache automake \
+            libltdl-dev
+
+      - name: Install Buildozer & Cython
+        run: |
+          pip install --upgrade pip
+          pip install buildozer==1.5.0 cython==0.29.33
+
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: buildozer-global-${{ hashFiles('android_app/buildozer.spec') }}
+          restore-keys: buildozer-global-
+
+      - name: Cache Buildozer project build directory
+        uses: actions/cache@v4
+        with:
+          path: android_app/.buildozer
+          key: buildozer-project-${{ hashFiles('android_app/buildozer.spec') }}
+          restore-keys: buildozer-project-
+
+      - name: Build APK
+        working-directory: android_app
+        run: |
+          yes | buildozer -v android debug
+
+      - name: Find built APK
+        id: find_apk
+        working-directory: android_app
+        run: |
+          APK_PATH=$(find bin -name "*.apk" | head -n 1)
+          echo "Ditemukan APK: $APK_PATH"
+          echo "apk_path=android_app/$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obd2-scanner-android-apk
+          path: ${{ steps.find_apk.outputs.apk_path }}
+
+      - name: Upload full build log (kalau gagal, buka ini)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-log
+          path: android_app/.buildozer/android/platform/build-*/build.log
+          if-no-files-found: ignore
