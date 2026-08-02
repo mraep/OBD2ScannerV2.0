@@ -1,0 +1,39 @@
+name: Build Windows EXE
+
+# Opsional: kalau kamu upload folder ini ke repo GitHub, workflow ini akan
+# otomatis build OBD2Scanner.exe di server Windows milik GitHub (gratis untuk
+# repo publik) - jadi kamu tidak perlu install Python/PyInstaller sendiri.
+# Hasil .exe bisa diunduh dari tab "Actions" -> pilih run terakhir -> "Artifacts".
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "obd2_scanner_gui.py"
+      - "obd2_scanner.spec"
+      - "requirements.txt"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe
+        run: pyinstaller --clean obd2_scanner.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBD2Scanner-windows-exe
+          path: dist/OBD2Scanner.exe
