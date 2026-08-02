@@ -1,0 +1,4 @@
+obd
+pyserial
+matplotlib
+requests
